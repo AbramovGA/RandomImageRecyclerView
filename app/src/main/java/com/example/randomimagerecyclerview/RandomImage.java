@@ -2,10 +2,18 @@ package com.example.randomimagerecyclerview;
 
 public class RandomImage {
 
-    String name;
+    String path;
 
-    public String getName() {
-        return name;
+    public RandomImage() {
+        path = "http://i.imgur.com/DvpvklR.png";
+    }
+
+    public RandomImage(String path) {
+        this.path = path;
+    }
+
+    public String getPath() {
+        return path;
     }
 
 

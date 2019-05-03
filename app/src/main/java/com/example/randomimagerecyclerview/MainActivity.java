@@ -1,14 +1,18 @@
 package com.example.randomimagerecyclerview;
 
+import android.app.Activity;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.RecyclerView.LayoutManager;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends Activity {
 
-    RandomImageAdapter adapter = new RandomImageAdapter();
+    RecyclerView recyclerView;
+    LayoutManager layoutManager;
+    RandomImageAdapter adapter;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -18,9 +22,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initRecyclerView() {
-        RecyclerView recyclerView = findViewById(R.id.recyclerView);
-        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this);
+
+        recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
+        layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
+        adapter = new RandomImageAdapter();
         recyclerView.setAdapter(adapter);
     }
 }

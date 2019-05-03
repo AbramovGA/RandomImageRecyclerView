@@ -14,9 +14,14 @@ import java.util.List;
 
 public class RandomImageAdapter extends RecyclerView.Adapter<RandomImageAdapter.ViewHolder> {
 
-    List<RandomImage> images = new ArrayList<>(100);
+    List<RandomImage> images;
 
-    {
+    public RandomImageAdapter(List<RandomImage> images) {
+        this.images = images;
+    }
+
+    public RandomImageAdapter() {
+        images = new ArrayList<>(100);
         for (int i = 0; i < 100; i++) {
             images.add(new RandomImage());
         }
@@ -25,16 +30,17 @@ public class RandomImageAdapter extends RecyclerView.Adapter<RandomImageAdapter.
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int i) {
-        LayoutInflater inflater = LayoutInflater.from(parent.getContext());
-        View view = inflater.inflate(R.layout.item_randomimg, parent, false);
+
+        ImageView view = (ImageView) LayoutInflater.from(parent.getContext())
+                                                    .inflate(R.layout.item_randomimg, parent, false);
+
         return new ViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         RandomImage image = images.get(position);
-//        holder.name.setText(image.getName());
-        Picasso.get().load("http://i.imgur.com/DvpvklR.png").into(holder.image);
+        Picasso.get().load(image.getPath()).into(holder.imageView);
     }
 
     @Override
@@ -42,14 +48,15 @@ public class RandomImageAdapter extends RecyclerView.Adapter<RandomImageAdapter.
         return images.size();
     }
 
-    static class ViewHolder extends RecyclerView.ViewHolder {
-        //        final TextView name;
-        final ImageView image;
 
-        public ViewHolder(View view) {
+
+
+    public static class ViewHolder extends RecyclerView.ViewHolder {
+        public ImageView imageView;
+
+        public ViewHolder(ImageView view) {
             super(view);
-//            name = view.findViewById(R.id.lorem_name);
-            image = view.findViewById(R.id.item_random_image);
+            imageView = view;
         }
     }
 }
