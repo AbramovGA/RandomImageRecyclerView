@@ -6,9 +6,20 @@ import android.support.annotation.Nullable;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.example.randomimagerecyclerview.model.Post;
+import com.example.randomimagerecyclerview.network.JSONPlaceholderService;
 import com.squareup.picasso.Picasso;
 
+import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ForkJoinPool;
+
+import lombok.SneakyThrows;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 public class ItemActivity extends Activity {
 
@@ -20,14 +31,36 @@ public class ItemActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_item);
         String imageUrl = getImgFromIntent().orElse(IMG_NOT_FOUND);
-        String text = loadTextFromSomewhere().orElse(TEXT_NOT_FOUND);
 
-        setItem(imageUrl, text);
+        setItem(imageUrl);
 
     }
 
-    private Optional<String> loadTextFromSomewhere() {
-        return Optional.empty();
+    @SneakyThrows
+    private void loadTextFromSomewhere() {
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("https://jsonplaceholder.typicode.com/")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        JSONPlaceholderService service = retrofit.create(JSONPlaceholderService.class);
+
+        CompletableFuture<Void> future = CompletableFuture.supplyAsync(() -> {
+            Response<List<Post>> response = null;
+            try {
+                response = service.listPosts().execute();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return response;
+        }).thenAccept(listResponse -> {
+            String text = listResponse.body().get(0).getBody();
+            TextView textView = findViewById(R.id.item_description);
+            textView.setText(text);
+        });
+
+        future.get();
+
     }
 
     private Optional<String> getImgFromIntent() {
@@ -38,12 +71,11 @@ public class ItemActivity extends Activity {
         return Optional.ofNullable(imageUrl);
     }
 
-    private void setItem(String imageUrl, String text) {
-        TextView textView = findViewById(R.id.item_description);
-        textView.setText(text);
-
+    private void setItem(String imageUrl) {
         ImageView imageView = findViewById(R.id.item_image);
         Picasso.get().load(imageUrl).into(imageView);
+
+        loadTextFromSomewhere();
     }
 
 }
