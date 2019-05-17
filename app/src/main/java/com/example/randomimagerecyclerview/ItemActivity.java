@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.example.randomimagerecyclerview.model.Post;
@@ -25,11 +26,15 @@ public class ItemActivity extends Activity {
 
     private static String IMG_NOT_FOUND = "https://webhostingmedia.net/wp-content/uploads/2018/01/http-error-404-not-found.png";
     private static String TEXT_NOT_FOUND = "TEXT NOT FOUND";
+    private ProgressBar progressBar;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_item);
+
+        progressBar = findViewById(R.id.progress);
+
         String imageUrl = getImgFromIntent().orElse(IMG_NOT_FOUND);
 
         setItem(imageUrl);
