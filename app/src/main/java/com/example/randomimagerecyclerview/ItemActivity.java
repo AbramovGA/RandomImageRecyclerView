@@ -13,11 +13,11 @@ import com.squareup.picasso.Picasso;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 
+import io.reactivex.Observable;
+import io.reactivex.Single;
+import io.reactivex.android.schedulers.AndroidSchedulers;
 import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
 
 import static android.view.View.INVISIBLE;
 import static android.view.View.VISIBLE;
@@ -31,23 +31,33 @@ public class ItemActivity extends Activity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_item);
-        String imageUrl = getImgFromIntent().orElse(IMG_NOT_FOUND);
 
-        loadImageFromSomwhere(imageUrl);
-
-        CompletableFuture.runAsync(this::loadTextFromSomewhere).thenRun(() -> runOnUiThread(() -> {
-            findViewById(R.id.item_screen).setVisibility(VISIBLE);
-            findViewById(R.id.progress).setVisibility(INVISIBLE);
-        }));
+        loadImageFromSomwhere();
+        loadTextFromSomwhere().observeOn(AndroidSchedulers.mainThread())
+                .doOnComplete(() -> {
+                    findViewById(R.id.item_screen).setVisibility(VISIBLE);
+                    findViewById(R.id.progress).setVisibility(INVISIBLE);
+                });
     }
 
-    private void loadTextFromSomewhere() {
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("https://jsonplaceholder.typicode.com/")
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
+    private void loadImageFromSomwhere() {
+        String imageUrl = getImgFromIntent().orElse(IMG_NOT_FOUND);
+        ImageView imageView = findViewById(R.id.item_image);
+        Picasso.get().load(imageUrl).into(imageView);
+    }
 
-        JSONPlaceholderService service = retrofit.create(JSONPlaceholderService.class);
+    private Observable loadTextFromSomwhere() {
+        TextView textView = findViewById(R.id.item_description);
+        return Single.fromCallable(this::loadText)
+                .observeOn(AndroidSchedulers.mainThread())
+                .doAfterSuccess((text) -> textView.setText(text))
+                .toObservable();
+    }
+
+
+    private String loadText() {
+
+        JSONPlaceholderService service = JSONPlaceholderService.init();
 
         Response<List<Post>> response = null;
         try {
@@ -57,16 +67,14 @@ public class ItemActivity extends Activity {
         }
 
         String text = response.body().get(0).getBody();
-        runOnUiThread(() -> {
-            TextView textView = findViewById(R.id.item_description);
-            textView.setText(text);
-        });
 
         try {
             Thread.sleep(2000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+
+        return text;
 
     }
 
@@ -77,10 +85,4 @@ public class ItemActivity extends Activity {
         }
         return Optional.ofNullable(imageUrl);
     }
-
-    private void loadImageFromSomwhere(String imageUrl) {
-        ImageView imageView = findViewById(R.id.item_image);
-        Picasso.get().load(imageUrl).into(imageView);
-    }
-
 }
