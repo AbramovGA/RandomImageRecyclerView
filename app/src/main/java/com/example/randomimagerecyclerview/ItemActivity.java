@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.widget.ImageView;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.example.randomimagerecyclerview.model.Post;
@@ -15,29 +14,33 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ForkJoinPool;
 
 import lombok.SneakyThrows;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
+import static android.view.View.INVISIBLE;
+import static android.view.View.VISIBLE;
+
 public class ItemActivity extends Activity {
 
     private static String IMG_NOT_FOUND = "https://webhostingmedia.net/wp-content/uploads/2018/01/http-error-404-not-found.png";
     private static String TEXT_NOT_FOUND = "TEXT NOT FOUND";
-    private ProgressBar progressBar;
 
+    @SneakyThrows
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_item);
-
-        progressBar = findViewById(R.id.progress);
-
         String imageUrl = getImgFromIntent().orElse(IMG_NOT_FOUND);
 
-        setItem(imageUrl);
+        loadImageFromSomwhere(imageUrl);
+
+        CompletableFuture.runAsync(this::loadTextFromSomewhere).thenRun(() -> {
+            findViewById(R.id.progress).setVisibility(INVISIBLE);
+            findViewById(R.id.item_screen).setVisibility(VISIBLE);
+        }).get();
 
     }
 
@@ -50,7 +53,7 @@ public class ItemActivity extends Activity {
 
         JSONPlaceholderService service = retrofit.create(JSONPlaceholderService.class);
 
-        CompletableFuture<Void> future = CompletableFuture.supplyAsync(() -> {
+        CompletableFuture.supplyAsync(() -> {
             Response<List<Post>> response = null;
             try {
                 response = service.listPosts().execute();
@@ -62,10 +65,12 @@ public class ItemActivity extends Activity {
             String text = listResponse.body().get(0).getBody();
             TextView textView = findViewById(R.id.item_description);
             textView.setText(text);
-        });
-
-        future.get();
-
+            try {
+                Thread.sleep(2000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }).get();
     }
 
     private Optional<String> getImgFromIntent() {
@@ -76,11 +81,9 @@ public class ItemActivity extends Activity {
         return Optional.ofNullable(imageUrl);
     }
 
-    private void setItem(String imageUrl) {
+    private void loadImageFromSomwhere(String imageUrl) {
         ImageView imageView = findViewById(R.id.item_image);
         Picasso.get().load(imageUrl).into(imageView);
-
-        loadTextFromSomewhere();
     }
 
 }
