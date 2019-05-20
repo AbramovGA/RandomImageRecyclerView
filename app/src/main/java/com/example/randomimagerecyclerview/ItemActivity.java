@@ -1,8 +1,10 @@
 package com.example.randomimagerecyclerview;
 
 import android.app.Activity;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.util.Log;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -20,6 +22,7 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
+import static android.content.ContentValues.TAG;
 import static android.view.View.INVISIBLE;
 import static android.view.View.VISIBLE;
 
@@ -38,10 +41,9 @@ public class ItemActivity extends Activity {
         loadImageFromSomwhere(imageUrl);
 
         CompletableFuture.runAsync(this::loadTextFromSomewhere).thenRun(() -> {
-            findViewById(R.id.progress).setVisibility(INVISIBLE);
             findViewById(R.id.item_screen).setVisibility(VISIBLE);
-        }).get();
-
+            findViewById(R.id.progress).setVisibility(INVISIBLE);
+        }).complete(null);
     }
 
     @SneakyThrows
@@ -70,7 +72,8 @@ public class ItemActivity extends Activity {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-        }).get();
+        }).complete(null);
+
     }
 
     private Optional<String> getImgFromIntent() {
